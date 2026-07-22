@@ -5,14 +5,16 @@
 ## 현재 위치
 
 - Phase 1(진행): 조회 피드 + 제보(크라우드소싱) + 운영자 검수. 인증 없음.
-- Phase 2(예정): 인증(Spring Security) → 북마크 → 마감임박 이메일 알림(`@Scheduled`). 근거 [ADR-0003](docs/adr/0003-auth-last.md).
-- 데이터 공급: 운영자 등록 + 사용자 제보. 크롤러/스크래퍼는 후순위.
+- Phase 2(예정): 인증(Spring Security OAuth2, Kakao/Google 소셜 로그인) → 북마크 → 마감임박 이메일 알림(`@Scheduled`). 근거 [ADR-0003](docs/adr/0003-auth-last.md), 기능명세 [docs/spec/phase2.md](docs/spec/phase2.md).
+- 데이터 공급: 운영자 등록 + 사용자 제보. 크롤러/스크래퍼는 후순위. 수급·성공지표 [docs/product.md](docs/product.md).
 
 ## 아키텍처 요점 (재서술 대신 포인터)
 
 - 제보는 별도 테이블 없이 `Event.moderationStatus`로 통합 — [ADR-0002](docs/adr/0002-moderation-on-event.md).
 - 이벤트 진행 상태(UPCOMING/ONGOING/ENDING_SOON/ENDED)는 저장 안 하고 파생 — [ADR-0004](docs/adr/0004-derived-status.md).
-- `/api/admin/**` 는 Phase 2에서 인증으로 잠글 지점. 현재 무인증(의도적 부채).
+- `/api/admin/**` 는 Phase 2에서 인증으로 잠글 지점. 현재 무인증이나 로컬 개발 한정(공개 배포는 인증 완비 후라 노출 창 없음).
+- 공개 배포는 Phase 2 완료 후 완성형 출시 → 관리형 RDS로 바로 시작. 배포 타깃 AWS 서울(S3+CloudFront·EC2·RDS·Route53) — [ADR-0005](docs/adr/0005-deployment-target.md).
+- 익명 제보 남용: 검수 게이트가 공개 피해 1차 차단, honeypot+IP rate limit 최소 방어 — [ADR-0006](docs/adr/0006-abuse-prevention.md).
 
 ## 코딩 컨벤션
 

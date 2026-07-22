@@ -12,7 +12,7 @@
 - 운영자 검수 큐: 승인/반려
 - **인증은 마지막 단계(Phase 2)** — 개발·테스트 편의를 위해 로그인 벽을 뒤로 미룸
 
-로드맵·설계 근거는 [docs/adr](docs/adr) 참조.
+로드맵·설계 근거는 [docs/adr](docs/adr), Phase 2 기능명세는 [docs/spec/phase2.md](docs/spec/phase2.md), 성공지표·데이터 수급은 [docs/product.md](docs/product.md) 참조.
 
 ## 스택
 
