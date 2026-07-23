@@ -1,19 +1,27 @@
 # CLAUDE.md — MeepleDay
 
-보드게임 펀딩·선주문·특가 이벤트를 국내·해외 통합해 한눈에 보는 서비스. 개요·실행은 [README](README.md), 설계 근거는 [docs/adr](docs/adr).
+흩어져 있는 보드게임 이벤트 일정(펀딩·선주문·특가·오프라인 행사·예고)을 국내·해외 통합해 한 곳에서 보는 서비스. **제품 정의 단일 소스 = [docs/prd.md](docs/prd.md)**, 개요·실행은 [README](README.md), 설계 근거는 [docs/adr](docs/adr).
 
 ## 현재 위치
 
-- Phase 1(진행): 조회 피드 + 제보(크라우드소싱) + 운영자 검수. 인증 없음.
-- Phase 2(예정): 인증(Spring Security OAuth2, Kakao/Google 소셜 로그인) → 북마크 → 마감임박 이메일 알림(`@Scheduled`). 근거 [ADR-0003](docs/adr/0003-auth-last.md), 기능명세 [docs/spec/phase2.md](docs/spec/phase2.md).
-- 데이터 공급: 운영자 등록 + 사용자 제보. 크롤러/스크래퍼는 후순위. 수급·성공지표 [docs/product.md](docs/product.md).
+- **[PRD](docs/prd.md) 확정, 구현은 M0 착수 전.** 정체성을 "펀딩 애그리게이터" → "보드게임 이벤트 캘린더"로 재정의하며 Phase 1/2 구분 폐기.
+- 로드맵: **M0 재설계 기반 → M1 발견 → M2 공급 → M3 추적 → M4+ 장기 비전** ([PRD §7](docs/prd.md#7-로드맵-전면-재수립)).
+- 구현 완료: 피드·상세·제보·검수, 남용 방지, **인증(Kakao/Google OAuth2, 세션 쿠키+CSRF)**. 현황표는 [README](README.md#구현-현황).
+- 미구현 주요 항목: Game 엔티티, `OFFLINE_EVENT` 유형, URL 자동 채움, OG 프리렌더, 타임라인 레이아웃, 북마크·알림.
+- 데이터 공급: 운영자 등록 + 사용자 제보. 자동 수집은 M4+ defer. 수급·성공지표 [docs/product.md](docs/product.md).
 
 ## 아키텍처 요점 (재서술 대신 포인터)
 
 - 제보는 별도 테이블 없이 `Event.moderationStatus`로 통합 — [ADR-0002](docs/adr/0002-moderation-on-event.md).
 - 이벤트 진행 상태(UPCOMING/ONGOING/ENDING_SOON/ENDED)는 저장 안 하고 파생 — [ADR-0004](docs/adr/0004-derived-status.md).
-- `/api/admin/**` 는 Phase 2에서 인증으로 잠글 지점. 현재 무인증이나 로컬 개발 한정(공개 배포는 인증 완비 후라 노출 창 없음).
-- 공개 배포는 Phase 2 완료 후 완성형 출시 → 관리형 RDS로 바로 시작. 배포 타깃 AWS 서울(S3+CloudFront·EC2·RDS·Route53) — [ADR-0005](docs/adr/0005-deployment-target.md).
+  - **미해결**: `startAt`/`endAt`이 둘 다 null인 예고 이벤트가 `ONGOING`으로 떨어짐. M0에서 `ANNOUNCED` 분기 추가 예정.
+- `/api/admin/**` 는 **이미 `hasRole("ADMIN")`으로 잠김** — [SecurityConfig](src/main/kotlin/com/meepleday/user/SecurityConfig.kt). ADMIN은 자가가입 불가(허용목록 부여).
+- 게임 단위 묶음은 `Game` 1:N `Event` — [ADR-0007](docs/adr/0007-game-entity.md). 동일 게임 판정은 사람이(검수 단계).
+- 첫 화면은 기간 그룹 타임라인 — [ADR-0008](docs/adr/0008-timeline-layout.md). 현재 카드 그리드 구현은 교체 대상.
+- 공유 유입이 주 채널 → CSR SPA 유지하되 **OG 프리렌더 필수** — [ADR-0001](docs/adr/0001-tech-stack.md).
+- URL 자동 채움(단일 지시형 페치)은 자동 수집(대량 크롤링)과 별개 사안 — [ADR-0009](docs/adr/0009-fetch-vs-crawl.md). SSRF·자원 상한·rate limit 필수.
+- 성장 목표는 명시하되 캐시·프록시는 미구현(관측 후 도입) — [ADR-0010](docs/adr/0010-growth-target-unbuilt.md).
+- 배포 타깃 AWS 서울(S3+CloudFront·EC2·RDS·Route53), 공개 배포는 M3 완료 후 완성형 출시 — [ADR-0005](docs/adr/0005-deployment-target.md).
 - 익명 제보 남용: 검수 게이트가 공개 피해 1차 차단, honeypot+IP rate limit 최소 방어 — [ADR-0006](docs/adr/0006-abuse-prevention.md).
 
 ## 코딩 컨벤션
@@ -24,7 +32,7 @@
 - wildcard import 금지. 매직넘버·반복 문자열 상수화.
 - 함수 바디 약 30줄 상한, 넘으면 `validateXxx`/`buildXxx`/`resolveXxx` private 헬퍼로 추출.
 - 트랜잭션 경계 명시: 읽기 `@Transactional(readOnly = true)`, 쓰기 `@Transactional`.
-- 현재 유저는 `SecurityContext` 직접 접근 금지, `CurrentUserProvider`류 주입(Phase 2).
+- 현재 유저는 `SecurityContext` 직접 접근 금지, [`CurrentUserProvider`](src/main/kotlin/com/meepleday/user/CurrentUserProvider.kt) 주입.
 
 **Kotlin/Spring**
 - Null safety: `?: throw` 엘비스만. `!!`·`requireNotNull()`·`if (x == null) throw` 금지.
