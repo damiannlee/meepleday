@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { fetchModerationQueue, moderate, type EventResponse } from "./api";
+import { ApiHttpError, fetchModerationQueue, moderate, type EventResponse } from "./api";
 import { EventCard } from "./EventCard";
 
 export function AdminView() {
   const [pending, setPending] = useState<EventResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [needsAdminAuth, setNeedsAdminAuth] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -13,8 +14,15 @@ export function AdminView() {
       .then((page) => {
         setPending(page.content);
         setError(null);
+        setNeedsAdminAuth(false);
       })
-      .catch((e: Error) => setError(e.message))
+      .catch((e: unknown) => {
+        if (e instanceof ApiHttpError && (e.status === 401 || e.status === 403)) {
+          setNeedsAdminAuth(true);
+        } else if (e instanceof Error) {
+          setError(e.message);
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -31,6 +39,15 @@ export function AdminView() {
     await moderate(id, "REJECT", reason);
     load();
   };
+
+  if (needsAdminAuth) {
+    return (
+      <section>
+        <h2 className="section-title">검수 큐 (제보 대기)</h2>
+        <p className="muted">운영자(ADMIN) 로그인이 필요합니다.</p>
+      </section>
+    );
+  }
 
   return (
     <section>

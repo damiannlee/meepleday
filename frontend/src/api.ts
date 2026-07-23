@@ -57,12 +57,48 @@ export interface SubmissionPayload {
   website?: string;
 }
 
+export type AuthProvider = "KAKAO" | "GOOGLE";
+export type UserRole = "USER" | "ADMIN";
+
+export interface MeResponse {
+  id: number;
+  provider: AuthProvider;
+  email: string | null;
+  displayName: string;
+  role: UserRole;
+}
+
+export class ApiHttpError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
+/** Spring Security's CookieCsrfTokenRepository sets this on every response — read it back for mutating requests. */
+function readCsrfToken(): string | null {
+  const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
 async function handle<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const body = await res.json().catch(() => null);
-    throw new Error(body?.message ?? `Request failed: ${res.status}`);
+    throw new ApiHttpError(res.status, body?.message ?? `Request failed: ${res.status}`);
   }
+  if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
+}
+
+/** POST/PATCH/DELETE need the CSRF header attached; GET is exempt (Spring Security only checks mutating methods). */
+function mutatingHeaders(): Record<string, string> {
+  const token = readCsrfToken();
+  return {
+    "Content-Type": "application/json",
+    ...(token ? { "X-XSRF-TOKEN": token } : {}),
+  };
 }
 
 export async function fetchFeed(filters: FeedFilters, page = 0): Promise<Page<EventResponse>> {
@@ -78,7 +114,7 @@ export async function submitEvent(payload: SubmissionPayload): Promise<EventResp
   return handle(
     await fetch("/api/events", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: mutatingHeaders(),
       body: JSON.stringify(payload),
     }),
   );
@@ -98,8 +134,18 @@ export async function moderate(
   return handle(
     await fetch(`/api/admin/events/${id}/moderation`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: mutatingHeaders(),
       body: JSON.stringify({ action, reason }),
     }),
   );
+}
+
+export async function fetchMe(): Promise<MeResponse | null> {
+  const res = await fetch("/api/me");
+  if (res.status === 401) return null;
+  return handle(res);
+}
+
+export async function logout(): Promise<void> {
+  await fetch("/api/auth/logout", { method: "POST", headers: mutatingHeaders() });
 }

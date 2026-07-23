@@ -9,6 +9,9 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": { target: backend, changeOrigin: true },
+      // OAuth2 login redirect + provider callback, so the login links work through the dev server too.
+      "/oauth2": { target: backend, changeOrigin: true },
+      "/login/oauth2": { target: backend, changeOrigin: true },
     },
   },
 });

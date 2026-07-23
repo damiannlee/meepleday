@@ -204,6 +204,21 @@ body {
   cursor: pointer;
 }
 
+.auth-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.auth-status .btn {
+  text-decoration: none;
+  display: inline-block;
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
 .btn-primary {
   background: var(--accent);
   color: #fff;
