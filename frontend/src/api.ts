@@ -53,6 +53,8 @@ export interface SubmissionPayload {
   currency?: string;
   submitterName?: string;
   submitterEmail?: string;
+  /** Honeypot decoy: must stay empty for real users, see SubmitView. */
+  website?: string;
 }
 
 async function handle<T>(res: Response): Promise<T> {

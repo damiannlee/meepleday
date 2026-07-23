@@ -84,6 +84,15 @@ export function SubmitView() {
           설명
           <textarea value={form.description ?? ""} onChange={(e) => set("description", e.target.value)} />
         </label>
+        <label className="hp-field" aria-hidden="true">
+          Website
+          <input
+            tabIndex={-1}
+            autoComplete="off"
+            value={form.website ?? ""}
+            onChange={(e) => set("website", e.target.value)}
+          />
+        </label>
         <button className="btn btn-primary" type="submit" disabled={submitting}>
           {submitting ? "제출 중…" : "제보하기"}
         </button>
