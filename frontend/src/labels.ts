@@ -4,6 +4,7 @@ export const EVENT_TYPE_LABEL: Record<EventType, string> = {
   FUNDING: "펀딩",
   PREORDER: "선주문",
   SALE: "특가",
+  OFFLINE_EVENT: "행사",
 };
 
 export const REGION_LABEL: Record<Region, string> = {
@@ -12,6 +13,7 @@ export const REGION_LABEL: Record<Region, string> = {
 };
 
 export const STATUS_LABEL: Record<EventStatus, string> = {
+  ANNOUNCED: "예고",
   UPCOMING: "예정",
   ONGOING: "진행중",
   ENDING_SOON: "마감임박",
@@ -19,6 +21,7 @@ export const STATUS_LABEL: Record<EventStatus, string> = {
 };
 
 export const STATUS_COLOR: Record<EventStatus, string> = {
+  ANNOUNCED: "#a855f7",
   UPCOMING: "#6366f1",
   ONGOING: "#16a34a",
   ENDING_SOON: "#dc2626",
