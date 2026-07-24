@@ -13,7 +13,6 @@ interface Props {
 }
 
 export function EventCard({ event, children }: Props) {
-  const progress = event.fundingProgressPercent;
   return (
     <article className="card">
       <div className="card-head">
@@ -33,17 +32,7 @@ export function EventCard({ event, children }: Props) {
         <span className="chip chip-platform">{event.platform}</span>
       </div>
       {event.publisher && <p className="publisher">{event.publisher}</p>}
-      {progress != null && (
-        <div className="progress-wrap">
-          <div className="progress-bar">
-            <div
-              className="progress-fill"
-              style={{ width: `${Math.min(progress, 100)}%` }}
-            />
-          </div>
-          <span className="progress-label">{progress}% 달성</span>
-        </div>
-      )}
+      {event.scheduleNote && <p className="schedule-note">{event.scheduleNote}</p>}
       {children && <div className="card-actions">{children}</div>}
     </article>
   );

@@ -1,6 +1,6 @@
-export type EventType = "FUNDING" | "PREORDER" | "SALE";
+export type EventType = "FUNDING" | "PREORDER" | "SALE" | "OFFLINE_EVENT";
 export type Region = "DOMESTIC" | "OVERSEAS";
-export type EventStatus = "UPCOMING" | "ONGOING" | "ENDING_SOON" | "ENDED";
+export type EventStatus = "ANNOUNCED" | "UPCOMING" | "ONGOING" | "ENDING_SOON" | "ENDED";
 export type ModerationStatus = "PENDING" | "PUBLISHED" | "REJECTED";
 export type ModerationAction = "PUBLISH" | "REJECT";
 
@@ -16,10 +16,12 @@ export interface EventResponse {
   publisher: string | null;
   startAt: string | null;
   endAt: string | null;
-  goalAmount: string | null;
-  currentAmount: string | null;
-  currency: string | null;
-  fundingProgressPercent: number | null;
+  scheduleNote: string | null;
+  gameId: number | null;
+  location: string | null;
+  address: string | null;
+  admissionFee: string | null;
+  reservationUrl: string | null;
   status: EventStatus;
   moderationStatus: ModerationStatus;
 }
@@ -48,9 +50,12 @@ export interface SubmissionPayload {
   publisher?: string;
   startAt?: string;
   endAt?: string;
-  goalAmount?: string;
-  currentAmount?: string;
-  currency?: string;
+  scheduleNote?: string;
+  gameId?: number;
+  location?: string;
+  address?: string;
+  admissionFee?: string;
+  reservationUrl?: string;
   submitterName?: string;
   submitterEmail?: string;
   /** Honeypot decoy: must stay empty for real users, see SubmitView. */
