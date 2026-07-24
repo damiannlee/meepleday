@@ -7,7 +7,7 @@
 - **[PRD](docs/prd.md) 확정, M0(재설계 기반) 완료, M1(발견) 착수 전.** 정체성을 "펀딩 애그리게이터" → "보드게임 이벤트 캘린더"로 재정의하며 Phase 1/2 구분 폐기.
 - 로드맵: **M0 재설계 기반 → M1 발견 → M2 공급 → M3 추적 → M4+ 장기 비전** ([PRD §7](docs/prd.md#7-로드맵-전면-재수립)).
 - 구현 완료: 피드·상세·제보·검수, 남용 방지, **인증(Kakao/Google OAuth2, 세션 쿠키+CSRF)**, **M0 데이터 모델(`Game` 엔티티, `OFFLINE_EVENT`, `ANNOUNCED` 상태, 달성률 필드 제거)**. 현황표는 [README](README.md#구현-현황).
-- 미구현 주요 항목: URL 자동 채움, OG 프리렌더, 타임라인 레이아웃, 게임 매칭 후보 제시 UI, 북마크·알림.
+- 미구현 주요 항목: URL 자동 채움, OG 프리렌더, 타임라인 레이아웃, 키워드 검색, 게임 매칭 후보 제시 UI, 북마크·알림.
 - 데이터 공급: 운영자 등록 + 사용자 제보. 자동 수집은 M4+ defer. 수급·성공지표 [docs/product.md](docs/product.md).
 
 ## 아키텍처 요점 (재서술 대신 포인터)
@@ -22,6 +22,7 @@
 - 성장 목표는 명시하되 캐시·프록시는 미구현(관측 후 도입) — [ADR-0010](docs/adr/0010-growth-target-unbuilt.md).
 - 배포 타깃 AWS 서울(S3+CloudFront·EC2·RDS·Route53), 공개 배포는 M3 완료 후 완성형 출시 — [ADR-0005](docs/adr/0005-deployment-target.md).
 - 익명 제보 남용: 검수 게이트가 공개 피해 1차 차단, honeypot+IP rate limit 최소 방어 — [ADR-0006](docs/adr/0006-abuse-prevention.md).
+- 검색은 `LIKE` 부분일치로 시작(H2↔PostgreSQL 이식성), 게임 제목은 `gameId` 집합 경유 **2단계 질의**(join 불가). FTS는 규모 관측 시 defer — [ADR-0011](docs/adr/0011-search.md), 명세 [docs/spec/search.md](docs/spec/search.md).
 
 ## 코딩 컨벤션
 
